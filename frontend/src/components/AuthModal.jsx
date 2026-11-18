@@ -46,13 +46,21 @@ export default function AuthModal({
         onAuthSuccess(res, 'Đăng nhập thành công!');
         onClose();
       } else {
+        const cleanedPhone = phone.trim().replace(/[\s-]/g, '');
+        if (cleanedPhone && !/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/.test(cleanedPhone)) {
+          setError(
+            'Số điện thoại không hợp lệ (cần đúng định dạng SĐT Việt Nam 10 chữ số, ví dụ: 0912345678).'
+          );
+          setLoading(false);
+          return;
+        }
         const res = await apiRequest('/auth/register', {
           method: 'POST',
           body: {
             email: email.trim(),
             password,
             full_name: fullName.trim(),
-            phone: phone.trim() || null,
+            phone: cleanedPhone || null,
             university: university.trim() || null,
           },
         });

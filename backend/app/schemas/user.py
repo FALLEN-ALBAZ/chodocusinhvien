@@ -1,6 +1,7 @@
+import re
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UserRegisterRequest(BaseModel):
@@ -27,14 +28,28 @@ class UserRegisterRequest(BaseModel):
     )
     phone: str | None = Field(
         default=None,
-        max_length=30,
-        description="Số điện thoại liên hệ giao dịch",
+        max_length=20,
+        description="Số điện thoại liên hệ giao dịch (VD: 0912345678)",
     )
     university: str | None = Field(
         default="Trường ĐH Quản lý và Công nghệ Hải Phòng (HPU)",
         max_length=200,
         description="Trường đại học đang theo học",
     )
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        cleaned = value.strip().replace(" ", "").replace("-", "")
+        if not cleaned:
+            return None
+        if not re.match(r"^(0|\+84)(3|5|7|8|9)[0-9]{8}$", cleaned):
+            raise ValueError(
+                "Số điện thoại không hợp lệ (cần đúng định dạng SĐT Việt Nam 10 chữ số, ví dụ: 0912345678)."
+            )
+        return cleaned
 
 
 class UserLoginRequest(BaseModel):

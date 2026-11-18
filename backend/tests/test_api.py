@@ -118,6 +118,18 @@ def test_validation_errors_422(
     )
     assert bad_email.status_code == 422
 
+    # Số điện thoại sai định dạng khi đăng ký
+    bad_phone = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "valid_student_phone@sv.edu.vn",
+            "password": "Password123",
+            "full_name": "Sinh Viên Test SĐT",
+            "phone": "123abc",
+        },
+    )
+    assert bad_phone.status_code == 422
+
     # Giá âm khi đăng tin
     neg_price = client.post(
         "/api/v1/listings",
