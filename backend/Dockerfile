@@ -47,6 +47,7 @@ COPY . .
 # 9. Đảm bảo thư mục uploads tồn tại, cấp quyền thực thi cho entrypoint.sh
 # và chuyển quyền sở hữu toàn bộ /app và /app/uploads cho `appuser`
 RUN mkdir -p /app/uploads && \
+    sed -i 's/\r$//' /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \
     chown -R appuser:appuser /app /app/uploads
 
