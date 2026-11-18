@@ -9,7 +9,7 @@
 # ==============================================================================
 
 # --- STAGE 1: BUILD REACT FRONTEND ---
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 # Thiết lập thư mục làm việc khi build
 WORKDIR /app
