@@ -15,10 +15,11 @@ engine = create_engine(
 )
 
 
-@event.listens_for(engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    """Bật kiểm tra khóa ngoại (Foreign Keys) khi sử dụng SQLite để đồng nhất hành vi với PostgreSQL."""
-    if settings.DATABASE_URL.startswith("sqlite"):
+if engine.dialect.name == "sqlite":
+
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        """Bật kiểm tra khóa ngoại (Foreign Keys) khi sử dụng SQLite để đồng nhất hành vi với PostgreSQL."""
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()

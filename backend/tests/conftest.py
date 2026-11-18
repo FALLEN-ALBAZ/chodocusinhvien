@@ -8,6 +8,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
+# Thiết lập CSDL kiểm thử độc lập tại /tmp trước khi import app để đồng nhất engine
+TEST_DB_PATH = Path("/tmp/test_chodocu.db")
+TEST_UPLOAD_DIR = Path("/tmp/test_chodocu_uploads")
+os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH}"
+os.environ["UPLOAD_DIR"] = str(TEST_UPLOAD_DIR)
+
 from app.config import settings
 from app.database import Base, get_db
 from app.main import app
@@ -15,12 +21,6 @@ from app.models.user import User
 from app.security.auth import create_access_token
 from app.seed import seed_database
 
-# Thiết lập CSDL kiểm thử độc lập tại /tmp để không ảnh hưởng tới chodocu.db
-TEST_DB_PATH = Path("/tmp/test_chodocu.db")
-TEST_UPLOAD_DIR = Path("/tmp/test_chodocu_uploads")
-
-os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH}"
-os.environ["UPLOAD_DIR"] = str(TEST_UPLOAD_DIR)
 settings.DATABASE_URL = f"sqlite:///{TEST_DB_PATH}"
 settings.UPLOAD_DIR = str(TEST_UPLOAD_DIR)
 
