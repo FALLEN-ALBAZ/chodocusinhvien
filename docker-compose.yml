@@ -1,0 +1,94 @@
+# ==============================================================================
+# DOCKER COMPOSE - HỆ THỐNG CHỢ ĐỒ CŨ SINH VIÊN (chodocusinhvien)
+# Gồm 3 Services chuẩn ĐG2:
+#   1. db       : PostgreSQL 16 (Persistent Volume + Healthcheck)
+#   2. api      : FastAPI Backend (Non-root UID 1000, tự động migrate & seed)
+#   3. frontend : React SPA + Nginx Reverse Proxy (Non-root UID 101, cổng 80:8080)
+# Sơ đồ kết nối: Trình duyệt ---> Nginx (frontend:8080) ---> API (api:8000) ---> CSDL (db:5432)
+# Khởi chạy toàn bộ hệ thống bằng 1 lệnh duy nhất: `docker compose up --build`
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # SERVICE 1: CƠ SỞ DỮ LIỆU QUAN HỆ POSTGRESQL 16
+  # ----------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: chodocu_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-chodocu_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chodocu_secret_password_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-chodocusinhvien_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chodocu_user} -d ${POSTGRES_DB:-chodocusinhvien_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - chodocu_net
+
+  # ----------------------------------------------------------------------------
+  # SERVICE 2: BACKEND REST API (FASTAPI + SQLALCHEMY + ALEMBIC)
+  # ----------------------------------------------------------------------------
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chodocu_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-chodocu_user}:${POSTGRES_PASSWORD:-chodocu_secret_password_2026}@db:5432/${POSTGRES_DB:-chodocusinhvien_db}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-super-secret-jwt-key-change-in-production-chodocusinhvien-2026}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      DAILY_LISTING_LIMIT: ${DAILY_LISTING_LIMIT:-5}
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads_data:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - chodocu_net
+
+  # ----------------------------------------------------------------------------
+  # SERVICE 3: FRONTEND (REACT SPA) & NGINX REVERSE PROXY
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    container_name: chodocu_frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${APP_PORT:-80}:8080"
+    networks:
+      - chodocu_net
+
+volumes:
+  postgres_data:
+    name: chodocu_postgres_data
+  uploads_data:
+    name: chodocu_uploads_data
+
+networks:
+  chodocu_net:
+    name: chodocu_network
+    driver: bridge

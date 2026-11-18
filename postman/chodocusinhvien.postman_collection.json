@@ -1,0 +1,977 @@
+{
+  "info": {
+    "_postman_id": "c8f4a920-1118-4d62-9b04-chodocusinhvien",
+    "name": "Chợ Đồ Cũ Sinh Viên (chodocusinhvien) — Bộ Kiểm thử & Demo Bảo vệ ĐG2",
+    "description": "Bộ Postman Collection chuẩn v2.1 phục vụ Kiểm thử Tự động và Demo Bảo vệ Đồ án ĐG2 cho hệ thống **Chợ Đồ Cũ Sinh Viên (`chodocusinhvien`)**.\n\n### Hướng dẫn sử dụng nhanh:\n1. Khởi chạy hệ thống bằng `docker compose up --build -d` (sử dụng `baseUrl = http://localhost`) hoặc chạy trực tiếp Uvicorn (sử dụng `baseUrl = http://localhost:8000`).\n2. Chạy tuần tự từ **Thư mục 1** đến **Thư mục 7** bằng tính năng **Run Collection** của Postman.\n3. Các biến `{{studentSellerToken}}`, `{{studentBuyerToken}}`, `{{moderatorToken}}`, `{{createdListingId}}`, `{{createdOfferId}}`, `{{createdReportId}}` được tự động trích xuất và lưu qua `pm.collectionVariables.set()`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "studentSellerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentBuyerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "moderatorToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdListingId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "createdOfferId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "createdReportId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Xác thực & Đăng nhập 3 Vai trò (Sinh viên Bán, Sinh viên Mua, Kiểm duyệt viên)",
+      "description": "Kiểm tra sức khỏe hệ thống (`/api/v1/health`), đăng nhập 3 vai trò tác nhân chính trong kịch bản Demo ĐG2 và tự động lưu JWT Token vào biến Collection.",
+      "item": [
+        {
+          "name": "1.1. Kiểm tra sức khỏe hệ thống (Health Check & X-Process-Time-Ms)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về mã 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Trạng thái dịch vụ là ok và có header X-Process-Time-Ms', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('ok');",
+                  "    pm.response.to.have.header('X-Process-Time-Ms');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "health"]
+            }
+          }
+        },
+        {
+          "name": "1.2. Đăng nhập Sinh viên Bán hàng (Nguyễn Văn An)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Đăng nhập Sinh viên Bán hàng thành công (200 OK)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const res = pm.response.json();",
+                  "pm.test('Nhận JWT Access Token và đúng vai trò STUDENT', function () {",
+                  "    pm.expect(res.access_token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(res.user.role).to.eql('STUDENT');",
+                  "});",
+                  "pm.collectionVariables.set('studentSellerToken', res.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nguyenvana@sv.edu.vn\",\n  \"password\": \"Sv@123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.3. Đăng nhập Sinh viên Mua hàng (Trần Thị Bình)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Đăng nhập Sinh viên Mua hàng thành công (200 OK)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const res = pm.response.json();",
+                  "pm.test('Nhận JWT Access Token và đúng vai trò STUDENT', function () {",
+                  "    pm.expect(res.access_token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(res.user.role).to.eql('STUDENT');",
+                  "});",
+                  "pm.collectionVariables.set('studentBuyerToken', res.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tranthib@sv.edu.vn\",\n  \"password\": \"Sv@123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.4. Đăng nhập Kiểm duyệt viên (Lê Hoàng Nam)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Đăng nhập Kiểm duyệt viên thành công (200 OK)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const res = pm.response.json();",
+                  "pm.test('Nhận JWT Access Token và đúng vai trò MODERATOR', function () {",
+                  "    pm.expect(res.access_token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(res.user.role).to.eql('MODERATOR');",
+                  "});",
+                  "pm.collectionVariables.set('moderatorToken', res.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"kiemduyet@sv.edu.vn\",\n  \"password\": \"Mod@123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.5. Xem hồ sơ cá nhân đang đăng nhập (/api/v1/auth/me)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về mã 200 OK và ẩn password_hash', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const user = pm.response.json();",
+                  "    pm.expect(user.email).to.eql('nguyenvana@sv.edu.vn');",
+                  "    pm.expect(user).to.not.have.property('password_hash');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentSellerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Danh mục & Đăng tin bán kèm nhiều ảnh",
+      "description": "Lấy danh sách danh mục đồ cũ sinh viên và thực hiện đăng tin bán mới kèm nhiều hình ảnh minh họa (1:N). Tin mới đăng có trạng thái `PENDING` chờ duyệt.",
+      "item": [
+        {
+          "name": "2.1. Lấy danh sách 6 danh mục đồ cũ sinh viên",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về mã 200 OK và danh sách >= 6 danh mục', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const categories = pm.response.json();",
+                  "    pm.expect(categories.length).to.be.at.least(6);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "categories"]
+            }
+          }
+        },
+        {
+          "name": "2.2. Sinh viên Bán hàng đăng tin mới kèm 2 ảnh (Trạng thái khởi tạo PENDING)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Đăng tin thành công trả về 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const listing = pm.response.json();",
+                  "pm.test('Tin mới ở trạng thái PENDING và lưu đủ 2 ảnh minh họa', function () {",
+                  "    pm.expect(listing.status).to.eql('PENDING');",
+                  "    pm.expect(listing.images.length).to.eql(2);",
+                  "});",
+                  "pm.collectionVariables.set('createdListingId', listing.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentSellerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tai nghe chụp tai Sony WH-CH520 Bluetooth pin 50 giờ học tiếng Anh\",\n  \"description\": \"Tai nghe chính hãng Sony mình mua để luyện nghe TOEIC, đệm tai êm không đau tai, pin cực trâu dùng cả tuần không cần sạc.\",\n  \"price\": 650000,\n  \"condition\": \"LIKE_NEW\",\n  \"category_id\": 2,\n  \"image_urls\": [\n    \"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80\",\n    \"https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=800&q=80\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings"]
+            }
+          }
+        },
+        {
+          "name": "2.3. Sinh viên Bán hàng xem danh sách tin đăng của tôi (/api/v1/listings/my)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về mã 200 OK và có chứa tin vừa đăng', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const items = pm.response.json();",
+                  "    const createdId = Number(pm.collectionVariables.get('createdListingId'));",
+                  "    pm.expect(items.some(i => i.id === createdId)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentSellerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings/my",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings", "my"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Kiểm duyệt viên duyệt tin & Chứng minh phân quyền (403 Forbidden)",
+      "description": "Chứng minh cơ chế phân quyền RBAC: Sinh viên thường bị chặn `403 Forbidden` khi gọi API kiểm duyệt, sau đó Kiểm duyệt viên (`MODERATOR`) duyệt tin từ `PENDING` sang `APPROVED`.",
+      "item": [
+        {
+          "name": "3.1. [RBAC 403] Sinh viên cố tình gọi API duyệt tin của Kiểm duyệt viên",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Hệ thống chặn truy cập trái phép với mã 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentSellerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/moderation/listings/{{createdListingId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "moderation", "listings", "{{createdListingId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "3.2. Kiểm duyệt viên xem danh sách tin đang chờ duyệt (PENDING)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Kiểm duyệt viên lấy danh sách tin PENDING thành công (200 OK)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const list = pm.response.json();",
+                  "    pm.expect(list).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{moderatorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/moderation/listings?status=PENDING",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "moderation", "listings"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.3. Kiểm duyệt viên phê duyệt tin đăng sang APPROVED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Duyệt tin thành công (200 OK) và trạng thái chuyển sang APPROVED', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql('APPROVED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{moderatorToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/moderation/listings/{{createdListingId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "moderation", "listings", "{{createdListingId}}", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Tìm kiếm, Lọc, Sắp xếp, Phân trang & Yêu thích (N:N)",
+      "description": "Kiểm tra tìm kiếm đa tiêu chí, lọc khoảng giá, sắp xếp, phân trang và mối quan hệ Nhiều-Nhiều (`favorites` N:N).",
+      "item": [
+        {
+          "name": "4.1. Tìm kiếm, lọc theo danh mục + khoảng giá + sắp xếp + phân trang",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về 200 OK kèm cấu trúc phân trang chuẩn', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.all.keys('items', 'total', 'page', 'page_size', 'total_pages');",
+                  "    pm.expect(body.items.length).to.be.at.least(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings?q=Sony&category_id=2&min_price=100000&max_price=1000000&sort_by=price_asc&page=1&page_size=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Sony"
+                },
+                {
+                  "key": "category_id",
+                  "value": "2"
+                },
+                {
+                  "key": "min_price",
+                  "value": "100000"
+                },
+                {
+                  "key": "max_price",
+                  "value": "1000000"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "price_asc"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "12"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.2. Sinh viên Mua hàng bấm lưu Yêu thích tin đăng (Toggle Favorite N:N)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lưu yêu thích thành công (200 OK)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const fav = pm.response.json();",
+                  "    pm.expect(fav.is_favorited).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentBuyerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings/{{createdListingId}}/favorite",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings", "{{createdListingId}}", "favorite"]
+            }
+          }
+        },
+        {
+          "name": "4.3. Xem danh sách tin yêu thích của Sinh viên Mua hàng (/api/v1/users/me/favorites)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Danh sách yêu thích trả về 200 OK và có chứa tin vừa lưu', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const list = pm.response.json();",
+                  "    const createdId = Number(pm.collectionVariables.get('createdListingId'));",
+                  "    pm.expect(list.some(i => i.id === createdId)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentBuyerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me/favorites",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me", "favorites"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Gửi đề nghị mua & Người bán chấp nhận (Chuyển sang Đã bán)",
+      "description": "Sinh viên Mua hàng gửi đề nghị trả giá (`Offer`), sau đó Sinh viên Bán hàng chấp nhận (`ACCEPTED`) làm tin đăng tự động khóa sang trạng thái `SOLD`.",
+      "item": [
+        {
+          "name": "5.1. Sinh viên Mua hàng gửi đề nghị mua / trả giá (POST /listings/{id}/offers)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Tạo đề nghị mua thành công (201 Created)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const offer = pm.response.json();",
+                  "pm.test('Trạng thái đề nghị mua là PENDING', function () {",
+                  "    pm.expect(offer.status).to.eql('PENDING');",
+                  "    pm.expect(offer.offered_price).to.eql(600000);",
+                  "});",
+                  "pm.collectionVariables.set('createdOfferId', offer.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentBuyerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offered_price\": 600000,\n  \"message\": \"Mình học Khoa Kinh tế, chiều nay mình qua sảnh thư viện lấy luôn với giá 600k bạn nhé!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings/{{createdListingId}}/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings", "{{createdListingId}}", "offers"]
+            }
+          }
+        },
+        {
+          "name": "5.2. Sinh viên Bán hàng xem danh sách đề nghị mua nhận được (/api/v1/offers/received)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về 200 OK và có đề nghị mua vừa gửi', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const offers = pm.response.json();",
+                  "    const offerId = Number(pm.collectionVariables.get('createdOfferId'));",
+                  "    pm.expect(offers.some(o => o.id === offerId)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentSellerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/offers/received",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "offers", "received"]
+            }
+          }
+        },
+        {
+          "name": "5.3. Sinh viên Bán hàng chấp nhận đề nghị mua -> Tự động chốt đơn SOLD",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Chấp nhận đề nghị mua thành công (200 OK)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const offer = pm.response.json();",
+                  "    pm.expect(offer.status).to.eql('ACCEPTED');",
+                  "    pm.expect(offer.listing.status).to.eql('SOLD');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentSellerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/offers/{{createdOfferId}}/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "offers", "{{createdOfferId}}", "accept"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Đánh giá người bán (Cập nhật Điểm uy tín) & Báo cáo vi phạm",
+      "description": "Sinh viên Mua hàng đánh giá 5 sao sau khi giao dịch thành công (cập nhật `reputation_score` của người bán) và kiểm tra luồng Báo cáo vi phạm + Kiểm duyệt viên xử lý.",
+      "item": [
+        {
+          "name": "6.1. Sinh viên Mua hàng đánh giá 5 sao sau giao dịch (POST /listings/{id}/reviews)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Gửi đánh giá 5 sao thành công (201 Created)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const review = pm.response.json();",
+                  "    pm.expect(review.rating).to.eql(5);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentBuyerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Tai nghe Sony nghe cực hay, pin rất bền đúng như mô tả. Bạn bán hàng thân thiện đúng giờ!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings/{{createdListingId}}/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings", "{{createdListingId}}", "reviews"]
+            }
+          }
+        },
+        {
+          "name": "6.2. Kiểm tra hồ sơ công khai & Điểm uy tín của Người bán (/api/v1/users/3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về 200 OK kèm điểm uy tín đã cập nhật', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const seller = pm.response.json();",
+                  "    pm.expect(seller.total_reviews).to.be.at.least(2);",
+                  "    pm.expect(seller.reputation_score).to.be.within(1, 5);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "3"]
+            }
+          }
+        },
+        {
+          "name": "6.3. Sinh viên Mua hàng gửi báo cáo tin vi phạm (POST /listings/1/reports)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Gửi báo cáo vi phạm thành công (201 Created)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const report = pm.response.json();",
+                  "    pm.expect(report.status).to.eql('PENDING');",
+                  "    pm.collectionVariables.set('createdReportId', report.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentBuyerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Cần xác minh lại năm xuất bản giáo trình\",\n  \"description\": \"Nhờ Kiểm duyệt viên kiểm tra giúp năm tái bản của cuốn giáo trình này ạ.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings/1/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings", "1", "reports"]
+            }
+          }
+        },
+        {
+          "name": "6.4. Kiểm duyệt viên xử lý báo cáo vi phạm (PATCH /moderation/reports/{id})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Kiểm duyệt viên xử lý báo cáo thành công (200 OK)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const report = pm.response.json();",
+                  "    pm.expect(report.status).to.eql('DISMISSED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{moderatorToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DISMISSED\",\n  \"moderator_note\": \"Đã đối chiếu hình ảnh trang bìa, giáo trình đúng bản in chuẩn của trường.\",\n  \"reject_listing\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/moderation/reports/{{createdReportId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "moderation", "reports", "{{createdReportId}}"]
+            }
+          }
+        },
+        {
+          "name": "6.5. Xem thống kê tổng quan toàn hệ thống (/api/v1/stats/overview)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về số liệu thống kê tổng quan 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const stats = pm.response.json();",
+                  "    pm.expect(stats.total_listings).to.be.at.least(10);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/stats/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "stats", "overview"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Chứng minh kiểm chứng dữ liệu (422 Unprocessable Entity)",
+      "description": "Chứng minh cơ chế kiểm chứng dữ liệu đầu vào bằng Pydantic v2: từ chối giá âm, tiêu đề quá ngắn và số sao đánh giá ngoài khoảng `1..5` với mã `422 Unprocessable Entity`.",
+      "item": [
+        {
+          "name": "7.1. [Validation 422] Đăng tin với giá bán âm (price < 0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về mã 422 Unprocessable Entity khi nhập giá âm', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentSellerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tin đăng kiểm thử giá âm không hợp lệ\",\n  \"description\": \"Mô tả sản phẩm hợp lệ trên mười ký tự nhưng giá bị âm.\",\n  \"price\": -150000,\n  \"condition\": \"GOOD\",\n  \"category_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings"]
+            }
+          }
+        },
+        {
+          "name": "7.2. [Validation 422] Đánh giá người bán với số sao vượt ngưỡng (rating = 6)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Trả về mã 422 Unprocessable Entity khi rating > 5', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{studentBuyerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 6,\n  \"comment\": \"Số sao vượt quá phạm vi 1..5\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/listings/{{createdListingId}}/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "listings", "{{createdListingId}}", "reviews"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
