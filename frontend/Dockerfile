@@ -24,8 +24,9 @@ COPY frontend/package*.json ./
 # Cài đặt dependencies của Frontend
 RUN npm ci
 
-# Sao chép toàn bộ mã nguồn Frontend và tiến hành build ra thư mục /app/dist
-COPY frontend/ ./
+# Sao chép các file cấu hình và mã nguồn Frontend (tránh copy đè node_modules/dist từ máy host)
+COPY frontend/index.html frontend/vite.config.js frontend/tailwind.config.js frontend/postcss.config.js ./
+COPY frontend/src ./src
 RUN npm run build
 
 # --- STAGE 2: SERVE VỚI NON-ROOT NGINX ---
