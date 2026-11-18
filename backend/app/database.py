@@ -1,7 +1,6 @@
 from collections.abc import Generator
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from app.config import settings
@@ -16,7 +15,7 @@ engine = create_engine(
 )
 
 
-@event.listens_for(Engine, "connect")
+@event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     """Bật kiểm tra khóa ngoại (Foreign Keys) khi sử dụng SQLite để đồng nhất hành vi với PostgreSQL."""
     if settings.DATABASE_URL.startswith("sqlite"):

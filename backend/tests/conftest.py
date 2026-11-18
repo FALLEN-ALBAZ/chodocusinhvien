@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import settings
@@ -32,7 +31,7 @@ test_engine = create_engine(
 )
 
 
-@event.listens_for(Engine, "connect")
+@event.listens_for(test_engine, "connect")
 def _enable_sqlite_fk(dbapi_connection, _connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
